@@ -1,0 +1,140 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+    
+
+df=pd.read_csv("Employee.csv")
+    
+
+df.head()
+    
+
+df.tail()
+    
+
+df.info()
+df.describe()
+df['Attrition'].value_counts()
+    
+
+sns.countplot(x='JobSatisfaction', hue='Attrition', data=df)
+plt.title("Attrition by Job Satisfaction")
+plt.show()
+    
+
+# Convert columns with 'Yes'/'No' values to numerical representations (0 and 1)
+for column in df.select_dtypes(include=['object']).columns:
+    if df[column].isin(['Yes', 'No']).all():
+        df[column] = df[column].map({'Yes': 1, 'No': 0})
+
+# Calculate the correlation matrix only on numerical columns
+numerical_df = df.select_dtypes(include=np.number)
+corr_matrix = numerical_df.corr()
+
+# Generate the heatmap
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.show()
+    
+
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+df['Attrition'] = le.fit_transform(df['Attrition'])
+
+# Convert categorical columns
+df = pd.get_dummies(df, drop_first=True)
+
+    
+
+from sklearn.model_selection import train_test_split
+X = df.drop('Attrition', axis=1)
+y = df['Attrition']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+rf = RandomForestClassifier(random_state=42)
+rf.fit(X_train, y_train)
+    
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+
+rf = RandomForestClassifier(random_state=42)
+lr = LogisticRegression(max_iter=1000)
+
+rf.fit(X_train, y_train)
+lr.fit(X_train, y_train)
+
+print("Random Forest:\n", classification_report(y_test, rf.predict(X_test)))
+print("Logistic Regression:\n", classification_report(y_test, lr.predict(X_test)))
+
+    
+
+from sklearn.metrics import classification_report
+
+# Predictions and evaluation
+y_pred = rf.predict(X_test)
+print(classification_report(y_test, y_pred))
+    
+
+
+# !pip install shap
+
+# 2. Import required libraries
+import shap
+import matplotlib.pyplot as plt
+
+# 3. Create a SHAP explainer for the trained Random Forest model
+explainer = shap.TreeExplainer(rf)  # rf is your trained RandomForestClassifier
+
+# 4. Calculate SHAP values for the test set
+shap_values = explainer.shap_values(X_test)
+
+
+    
+
+import numpy as np
+
+# 1. Check type and shape
+print("Type of shap_values:", type(shap_values))
+print("Length of shap_values (should be 2):", len(shap_values))
+print("Shape of shap_values[1]:", np.shape(shap_values[1]))
+print("Shape of X_test_df:", X_test_df.shape)
+
+# 2. Check column alignment
+print("Are column names equal?", all(X_test_df.columns == X.columns))
+
+# 3. Show sample column names
+print("First 5 columns:", X_test_df.columns[:5].tolist())
+
+    
+
+import shap
+
+# Ensure test set is a DataFrame
+X_test_df = pd.DataFrame(X_test, columns=X.columns)
+
+# Tree explainer
+explainer = shap.TreeExplainer(rf)
+
+# Get SHAP values (single array for binary classification)
+shap_values = explainer.shap_values(X_test_df)
+
+# Check if it's a list or array
+if isinstance(shap_values, list):
+    print("Using shap_values[1] for class 1 (Attrition = Yes)")
+    shap.summary_plot(shap_values[1], X_test_df)
+else:
+    print("Single array detected, plotting directly.")
+    shap.summary_plot(shap_value
